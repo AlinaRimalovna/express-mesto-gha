@@ -33,14 +33,15 @@ module.exports.findAllCards = (req, res) => {
 };
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .orFail(new Error('ValidationError'))
-    .then(card => res.status(SUCCESS_CODE).send({ data: card }))
+    .orFail(new Error('DocumentNotFoundError'))
+    .then(card => res.status(200).send({ data: card }))
     .catch((err) => {
-      if (err.message === 'ValidationError') {
+      if (err.name === 'CastError') {
+        return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные при удалении карточки' })
+      } if (err.message === 'DocumentNotFoundError') {
         return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Карточка по данному Id не найдена' })
-      } else {
-        return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' })
       }
+      return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' })
     });
 };
 module.exports.likeCard = (req, res) => {
@@ -52,9 +53,9 @@ module.exports.likeCard = (req, res) => {
     .orFail(new Error('DocumentNotFoundError'))
     .then(card => res.status(SUCCESS_CODE).send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные для постановки лайка' })
-      } if (err.nmessage === 'DocumentNotFoundError') {
+      } if (err.message === 'DocumentNotFoundError') {
         return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Передан несуществующий Id карточки' })
       }
       return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' })
@@ -68,9 +69,9 @@ module.exports.dislikeCard = (req, res) => {
     { new: true, runValidators: true },
   )
     .orFail(new Error('DocumentNotFoundError'))
-    .then(card => res.status(SUCCESS_CODE).send({ data: card }))
+    .then(card => res.status(200).send({ data: card }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные для снятия лайка' })
       } if (err.message === 'DocumentNotFoundError') {
         return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Передан несуществующий Id карточки' })
