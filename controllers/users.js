@@ -18,7 +18,7 @@ module.exports.createUser = (req, res) => {
 };
 module.exports.findAllUsers = (req, res) => {
   User.find({})
-    .then(user => res.status(SUCCESS_CODE).send(user))
+    .then(user => res.status(200).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные пользователя' })
@@ -29,34 +29,36 @@ module.exports.findAllUsers = (req, res) => {
 };
 module.exports.findUser = (req, res) => {
   User.findById(req.params.userId)
-    .orFail(new Error('ValidationError'))
-    .then(user => res.status(SUCCESS_CODE).send(user))
+    .orFail(new Error('DocumentNotFoundError'))
+    .then(user => res.status(200).send(user))
     .catch((err) => {
-      if (err.message === 'ValidationError') {
-        return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Пользователь по данному Id не найден' })
-      } else {
-        return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' })
-      }
-    });
-};
-module.exports.updateUser = (req, res) => {
-  const { name } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name }, { new: true })
-    .orFail(new Error('ValidationError'))
-    .then(user => res.status(SUCCESS_CODE).send({ data: user }))
-    .catch((err) => {
-      if (err.message === 'ValidationError') {
-        return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные при обновлении пользователя' })
-      } if (err.name === 'DocumentNotFoundError') {
+      if (err.name === 'CastError') {
+        return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные при поиске пользователя' })
+      } if (err.message === 'DocumentNotFoundError') {
         return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Пользователь по данному Id не найден' })
       }
       return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' })
     });
 };
+module.exports.updateUser = (req, res) => {
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+    .orFail(new Error('DocumentNotFoundError'))
+    .then(user => res.status(200).send({ data: user }))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные при обновлении пользователя' })
+      } if (err.message === 'DocumentNotFoundError') {
+        return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Пользователь по данному Id не найден' })
+      }
+      console.log(err.name)
+      return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' })
+    });
+};
 module.exports.updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
-    .then(user => res.status(SUCCESS_CODE).send({ data: user }))
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+    .then(user => res.status(200).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные при обновлении пользователя' })

@@ -22,7 +22,7 @@ module.exports.createCard = (req, res) => {
 };
 module.exports.findAllCards = (req, res) => {
   Card.find({})
-    .then(card => res.status(SUCCESS_CODE).send({ data: card }))
+    .then(card => res.status(200).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные карточек' })
@@ -47,13 +47,14 @@ module.exports.likeCard = (req, res) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
-    { new: true },
+    { new: true, runValidators: true },
   )
+    .orFail(new Error('DocumentNotFoundError'))
     .then(card => res.status(SUCCESS_CODE).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные для постановки лайка' })
-      } if (err.name === 'DocumentNotFoundError') {
+      } if (err.nmessage === 'DocumentNotFoundError') {
         return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Передан несуществующий Id карточки' })
       }
       return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' })
@@ -64,13 +65,14 @@ module.exports.dislikeCard = (req, res) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
-    { new: true },
+    { new: true, runValidators: true },
   )
+    .orFail(new Error('DocumentNotFoundError'))
     .then(card => res.status(SUCCESS_CODE).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные для снятия лайка' })
-      } if (err.name === 'DocumentNotFoundError') {
+      } if (err.message === 'DocumentNotFoundError') {
         return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Передан несуществующий Id карточки' })
       }
       return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' })
