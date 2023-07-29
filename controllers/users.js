@@ -1,10 +1,10 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { ValidationError } = require('../errors/ValidationError');
-const { CastError } = require('../errors/CastError');
-const { NotFoundError } = require('../errors/NotFoundError');
-const { Conflict } = require('../errors/Conflict');
+const ValidationError = require('../errors/ValidationError');
+const CastError = require('../errors/CastError');
+const NotFoundError = require('../errors/NotFoundError');
+const Conflict = require('../errors/Conflict');
 
 const SUCCESS_CODE = 201;
 

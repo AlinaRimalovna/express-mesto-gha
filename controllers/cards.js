@@ -1,8 +1,8 @@
 const Card = require('../models/card');
-const { ValidationError } = require('../errors/ValidationError');
-const { CastError } = require('../errors/CastError');
-const { NotFoundError } = require('../errors/NotFoundError');
-const { Forbidden } = require('../errors/Forbidden');
+const ValidationError = require('../errors/ValidationError');
+const CastError = require('../errors/CastError');
+const NotFoundError = require('../errors/NotFoundError');
+const Forbidden = require('../errors/Forbidden');
 
 const SUCCESS_CODE = 201;
 
