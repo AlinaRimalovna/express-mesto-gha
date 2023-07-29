@@ -1,11 +1,12 @@
 const Card = require('../models/card');
+const { ValidationError } = require('../errors/ValidationError');
+const { CastError } = require('../errors/CastError');
+const { NotFoundError } = require('../errors/NotFoundError');
+const { Forbidden } = require('../errors/Forbidden');
 
 const SUCCESS_CODE = 201;
-const ERROR_CODE = 400;
-const UNDEFINED_ERROR_CODE = 404;
-const INTERNAL_SERVER_ERROR_CODE = 500;
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
@@ -13,61 +14,69 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.status(SUCCESS_CODE).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные при создании карточки' });
+        next(new ValidationError('Переданы некорректные данные при создании карточки'));
       }
-      return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' });
+      next(err);
     });
 };
-module.exports.findAllCards = (req, res) => {
+module.exports.findAllCards = (req, res, next) => {
   Card.find({})
     .then((card) => res.send({ data: card }))
-    .catch(() => res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' }));
+    .catch(next);
 };
-module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
-    .orFail(new Error('DocumentNotFoundError'))
-    .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные при удалении карточки' });
-      } if (err.message === 'DocumentNotFoundError') {
-        return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Карточка по данному Id не найдена' });
+module.exports.deleteCard = (req, res, next) => {
+  Card.findById(req.params.cardId)
+    .orFail(new NotFoundError('Карточка по данному Id не найдена'))
+    .then((card) => {
+      if (card.owner === req.user._id) {
+        Card.deleteOne(card)
+          .then((deleteCard) => res.send({ data: deleteCard }))
+          .catch((err) => {
+            if (err.name === 'CastError') {
+              next(new CastError('Переданы некорректные данные при удалении карточки'));
+            } if (err.message === 'DocumentNotFoundError') {
+              next(new NotFoundError('Карточка по данному Id не найдена'));
+            }
+            next(err);
+          });
       }
-      return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' });
-    });
+      throw new Forbidden('Недостаточно прав для удаления карточки');
+    })
+    .catch(next);
 };
-module.exports.likeCard = (req, res) => {
+
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true, runValidators: true },
   )
-    .orFail(new Error('DocumentNotFoundError'))
+    .orFail(new NotFoundError('Пользователь по данному Id не найден'))
     .then((card) => res.status(SUCCESS_CODE).send({ data: card }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные для постановки лайка' });
+        next(new CastError('Переданы некорректные данные для постановки лайка'));
       } if (err.message === 'DocumentNotFoundError') {
-        return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Передан несуществующий Id карточки' });
+        next(new NotFoundError('Передан несуществующий Id карточки'));
       }
-      return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' });
+      next(err);
     });
 };
 
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
     { new: true, runValidators: true },
   )
-    .orFail(new Error('DocumentNotFoundError'))
+    .orFail(new NotFoundError('Пользователь по данному Id не найден'))
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(ERROR_CODE).send({ message: ' Переданы некорректные данные для снятия лайка' });
+        next(new CastError('Переданы некорректные данные для снятия лайка'));
       } if (err.message === 'DocumentNotFoundError') {
-        return res.status(UNDEFINED_ERROR_CODE).send({ message: ' Передан несуществующий Id карточки' });
+        next(new NotFoundError('Передан несуществующий Id карточки'));
       }
-      return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: 'Произошла ошибка' });
+      next(err);
     });
 };
