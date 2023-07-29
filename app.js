@@ -1,8 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
-const cookieParser = require('cookie-parser');
 const { celebrate, Joi } = require('celebrate');
 const user = require('./routes/users');
 const card = require('./routes/cards');
@@ -17,12 +17,8 @@ app.use(bodyParser.json());
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().pattern(/^http?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{1,6}\b([-a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,:=]*)$/),
-    password: Joi.string().required(),
-  }),
-}), login);
+app.use('/users', auth, user);
+app.use('/cards', auth, card);
 app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
@@ -32,8 +28,7 @@ app.post('/signup', celebrate({
     password: Joi.string().required(),
   }),
 }), createUser);
-app.use('/users', auth, user);
-app.use('/cards', auth, card);
+app.post('/signin', login);
 app.use('*', (req, res) => {
   res.status(404).json({ message: 'Страница не найдена' });
 });
