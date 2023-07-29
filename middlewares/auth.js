@@ -8,14 +8,15 @@ module.exports = (req, res, next) => {
   let payload;
   try {
     payload = jwt.verify(token, 'some-secret-key');
-    req.user = payload;
-    next();
   } catch (err) {
-    if (err.code === 401) {
-      next(new Unauthorized('Необходима авторизация'));
-    }
-    // return res
+    // if (err.code === 401) {
+    //   next(new Unauthorized('Необходима авторизация'));
+    // }
+    return next(new Unauthorized('Необходима авторизация'));
+    //  res
     //   .status(401)
     //   .send({ message: 'Необходима авторизация' });
   }
+  req.user = payload;
+  next();
 };
