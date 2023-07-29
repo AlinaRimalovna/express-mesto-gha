@@ -19,7 +19,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required().pattern(/^http?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{1,6}\b([-a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,:=]*)$/),,
+    email: Joi.string().required().pattern(/^http?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{1,6}\b([-a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,:=]*)$/),
     password: Joi.string().required(),
   }),
 }), login);
