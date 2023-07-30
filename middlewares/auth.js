@@ -9,11 +9,11 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, 'some-secret-key');
   } catch (err) {
-    // if (err.code === 401) {
-    //   next(new Unauthorized('Необходима авторизация'));
-    // }
-    return next(new Unauthorized('Необходима авторизация'));
-    //  res
+    if (err.code === 401) {
+      next(new Unauthorized('Необходима авторизация'));
+    }
+    next(err);
+    // return res
     //   .status(401)
     //   .send({ message: 'Необходима авторизация' });
   }
