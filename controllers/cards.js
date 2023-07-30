@@ -28,13 +28,18 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .orFail(new NotFoundError('Карточка по данному Id не найдена'))
     .then((card) => {
-      if (card.owner === req.user._id) {
+      // console.log(String(card.owner))
+      // console.log('1523');
+      // console.log(req.user._id)
+      if (String(card.owner) === String(req.user._id)) {
         Card.deleteOne(card)
-          .then((deleteCard) => res.send({ data: deleteCard }))
+        // Card.findByIdAndRemove(req.params.cardId)
+          .then((deleteCard) => res.send(deleteCard))
           .catch((err) => {
             if (err.name === 'CastError') {
               next(new CastError('Переданы некорректные данные при удалении карточки'));
-            } if (err.message === 'DocumentNotFoundError') {
+            }
+            if (err.message === 'DocumentNotFoundError') {
               next(new NotFoundError('Карточка по данному Id не найдена'));
             }
             next(err);
