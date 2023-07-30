@@ -37,7 +37,7 @@ module.exports.deleteCard = (req, res, next) => {
       } else {
         Card.deleteOne(card)
         // Card.findByIdAndRemove(req.params.cardId)
-          .then((deleteCard) => res.status(SUCCESS_CODE).send(deleteCard))
+          .then((deleteCard) => res.status(200).send(deleteCard))
           .catch((err) => {
             if (err.name === 'CastError') {
               next(new CastError('Переданы некорректные данные при удалении карточки'));
