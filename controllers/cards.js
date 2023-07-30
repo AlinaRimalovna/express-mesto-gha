@@ -28,10 +28,13 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .orFail(new NotFoundError('Карточка по данному Id не найдена'))
     .then((card) => {
+      // console.log(String(card.owner));
+      // console.log('1523');
+      // console.log(req.user._id);
       if (String(card.owner) === String(req.user._id)) {
         Card.deleteOne(card)
-          .orFail(new Forbidden('Недостаточно прав для удаления карточки'))
-          .then((deleteCard) => res.status(200).send(deleteCard))
+        // Card.findByIdAndRemove(req.params.cardId)
+          .then((deleteCard) => res.status(SUCCESS_CODE).send(deleteCard))
           .catch((err) => {
             if (err.name === 'CastError') {
               next(new CastError('Переданы некорректные данные при удалении карточки'));
@@ -42,6 +45,7 @@ module.exports.deleteCard = (req, res, next) => {
             next(err);
           });
       }
+      next(new Forbidden('Недостаточно прав для удаления карточки'));
     })
     .catch(next);
 };
