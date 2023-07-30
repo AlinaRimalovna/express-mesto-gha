@@ -4,6 +4,8 @@ const {
   findAllUsers, findUser, updateUser, updateUserAvatar, getUserInfo,
 } = require('../controllers/users');
 
+const Reg = /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/;
+
 router.get('/', findAllUsers);
 router.get('/me', getUserInfo);
 router.get('/:userId', celebrate({
@@ -19,7 +21,7 @@ router.patch('/me', celebrate({
 }), updateUser);
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().required().pattern(/^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{1,6}\b([-a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,:=]*)$/),
+    avatar: Joi.string().required().pattern(Reg),
   }),
 }), updateUserAvatar);
 

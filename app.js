@@ -8,15 +8,19 @@ const user = require('./routes/users');
 const card = require('./routes/cards');
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const errorHandler = require('./middlewares/error-handler');
+const NotFoundError = require('./errors/NotFoundError');
 
-const { PORT = 3000 } = process.env;
+const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
+const Reg = /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/;
 
 const app = express();
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
+mongoose.connect(DB_URL);
 
+// 'mongodb://127.0.0.1:27017/mestodb'
 // app.post('/signin', login);
 // app.post('/signup', createUser);
 app.post('/signin', celebrate({
@@ -29,7 +33,7 @@ app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/),
+    avatar: Joi.string().pattern(Reg),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
@@ -37,21 +41,11 @@ app.post('/signup', celebrate({
 app.use('/users', auth, user);
 app.use('/cards', auth, card);
 
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Страница не найдена' });
+app.use('*', (req, res, next) => {
+  next(new NotFoundError('Страница не найдена'));
 });
 app.use(errors());
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-  res
-    .status(statusCode)
-    .send({
-      message: statusCode === 500
-        ? 'На сервере произошла ошибка'
-        : message,
-    });
-  next();
-});
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

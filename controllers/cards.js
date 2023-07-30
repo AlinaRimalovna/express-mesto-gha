@@ -15,6 +15,7 @@ module.exports.createCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные при создании карточки'));
+        return;
       }
       next(err);
     });
@@ -29,24 +30,18 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .orFail(new NotFoundError('Карточка по данному Id не найдена'))
     .then((card) => {
-      // console.log(String(card.owner));
-      // console.log('1523');
-      // console.log(req.user._id);
-      if (String(card.owner) !== String(req.user._id)) {
-        next(new Forbidden('Недостаточно прав для удаления карточки'));
-      } else {
+      if (String(card.owner) === String(req.user._id)) {
         Card.deleteOne(card)
-        // Card.findByIdAndRemove(req.params.cardId)
           .then((deleteCard) => res.status(200).send(deleteCard))
           .catch((err) => {
             if (err.name === 'CastError') {
               next(new CastError('Переданы некорректные данные при удалении карточки'));
+              return;
             }
-            // if (err.message === 'DocumentNotFoundError') {
-            //   next(new NotFoundError('Карточка по данному Id не найдена'));
-            // }
             next(err);
           });
+      } else {
+        next(new Forbidden('Недостаточно прав для удаления карточки'));
       }
     })
     .catch(next);
@@ -63,8 +58,10 @@ module.exports.likeCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new CastError('Переданы некорректные данные для постановки лайка'));
+        return;
       } if (err.message === 'DocumentNotFoundError') {
         next(new NotFoundError('Передан несуществующий Id карточки'));
+        return;
       }
       next(err);
     });
@@ -81,8 +78,10 @@ module.exports.dislikeCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new CastError('Переданы некорректные данные для снятия лайка'));
+        return;
       } if (err.message === 'DocumentNotFoundError') {
         next(new NotFoundError('Передан несуществующий Id карточки'));
+        return;
       }
       next(err);
     });

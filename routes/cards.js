@@ -4,10 +4,12 @@ const {
   createCard, findAllCards, deleteCard, likeCard, dislikeCard,
 } = require('../controllers/cards');
 
+const Reg = /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/;
+
 router.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    link: Joi.string().required().pattern(/^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/),
+    link: Joi.string().required().pattern(Reg),
   }),
 }), createCard);
 router.get('/', findAllCards);

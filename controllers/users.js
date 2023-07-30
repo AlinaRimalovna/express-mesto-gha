@@ -28,8 +28,10 @@ module.exports.createUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные при создании пользователя'));
+        return;
       } if (err.code === 11000) {
         next(new Conflict(' Пользователь с таким email уже существует'));
+        return;
       }
       next(err);
     });
@@ -46,8 +48,10 @@ module.exports.findUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new CastError('Переданы некорректные данные при поиске пользователя'));
+        return;
       } if (err.message === 'DocumentNotFoundError') {
         next(new NotFoundError('Пользователь по данному Id не найден'));
+        return;
       }
       next(err);
     });
@@ -60,8 +64,10 @@ module.exports.updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные при обновлении пользователя'));
+        return;
       } if (err.message === 'DocumentNotFoundError') {
         next(new NotFoundError('Пользователь по данному Id не найден'));
+        return;
       }
       next(err);
     });
@@ -73,8 +79,10 @@ module.exports.updateUserAvatar = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new ValidationError('Переданы некорректные данные при обновлении пользователя'));
+        return;
       } if (err.message === 'DocumentNotFoundError') {
         next(new NotFoundError('Пользователь по данному Id не найден'));
+        return;
       }
       next(err);
     });
@@ -82,7 +90,8 @@ module.exports.updateUserAvatar = (req, res, next) => {
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  // return
+  User.findUserByCredentials(email, password)
     .then((user) => {
       const payload = { _id: user._id, email: user.email };
       const token = jwt.sign(payload, 'some-secret-key');
@@ -91,7 +100,7 @@ module.exports.login = (req, res, next) => {
           maxAge: 3600000 * 24 * 7,
           httpOnly: true,
         });
-      res.send({ _id: user._id });
+      return res.send({ _id: user._id });
     })
     .catch(next);
 };
@@ -108,6 +117,7 @@ module.exports.getUserInfo = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new CastError('Переданы некорректные данные при поиске пользователя'));
+        return;
       }
       next(err);
     });
